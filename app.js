@@ -16,7 +16,7 @@ function isObjectEmpty(obj) {
 main().catch(err => console.log(err));
 
 async function main() {
-    await mongoose.connect('mongodb://localhost:27017/restaurantDB');
+    await mongoose.connect('mongodb+srv://admin-david:david1031@cluster0.e1tmm.mongodb.net/restaurantDB');
 }
 
 function updateAllData() {
