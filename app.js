@@ -1,11 +1,14 @@
 const express = require("express");
 const bodyParser = require("body-parser");
 const mongoose = require("mongoose");
+const cors = require('cors')
 const app = express();
 const { Schema } = mongoose;
 app.use(bodyParser.urlencoded({
     extended: true
 }));
+
+app.use(cors())
 
 function isObjectEmpty(obj) {
     return Object.keys(obj).length === 0;
@@ -16,16 +19,41 @@ async function main() {
     await mongoose.connect('mongodb://localhost:27017/restaurantDB');
 }
 
+function onEveryPost() {
+    let namesList = [];
+    mongoose.connection.db.listCollections().toArray(function (err, names) {
+        for (let i = 0; i < names.length; i++) {
+            // gets only the name and adds it to a list
+            const nameOnly = names[i].name;
+            namesList.push(nameOnly);
+        }
+        namesList.forEach((collectionName) => {
+            const currentModel = mongoose.model(collectionName, dbSchema);
+            currentModel.find({}).then((result) => {
+                allData[collectionName] = result
+            });
+        });
+    });
+}
+
+let allData = {};
+
+mongoose.connection.on("open", function (ref) {
+    console.log("Connected to mongo server.");
+    //trying to get collection names
+    onEveryPost();
+});
+
 const dbSchema = new Schema({
     name: String,
     litre: Number,
-    price: Number,
-    image: String
+    price: Number
 });
 
-app.get("/", (req, res) => {
-    res.redirect("/data/foo")
+app.get("/data", (req, res) => {
+    res.send(allData)
 });
+
 app.route("/data/:collection")
     .get((req, res) => {
         const { params } = req;
@@ -52,6 +80,7 @@ app.route("/data/:collection")
                 res.status(200).send("saved!")
             }
         });
+        onEveryPost()
     })
 
     .delete((req, res) => {
@@ -63,7 +92,8 @@ app.route("/data/:collection")
             } else {
                 res.send("collection deleted");
             }
-        })
+        });
+        onEveryPost()
     });
 
 app.route("/data/:collection/:foodName")
@@ -85,7 +115,8 @@ app.route("/data/:collection/:foodName")
         (async function () {
             reees = await currentModel.updateOne({ name: foodName }, req.body, { overwrite: true })
             res.send("Success");
-        })()
+        })();
+        onEveryPost();
     })
     .delete((req, res) => {
         const { collection, foodName } = req.params
@@ -97,6 +128,7 @@ app.route("/data/:collection/:foodName")
                 res.send("Successfully deleted");
             }
         });
+        onEveryPost();
     });
 
 app.listen(4000, () => {
