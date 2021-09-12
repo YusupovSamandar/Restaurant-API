@@ -19,7 +19,7 @@ async function main() {
     await mongoose.connect('mongodb://localhost:27017/restaurantDB');
 }
 
-function onEveryPost() {
+function updateAllData() {
     let namesList = [];
     mongoose.connection.db.listCollections().toArray(function (err, names) {
         for (let i = 0; i < names.length; i++) {
@@ -27,10 +27,15 @@ function onEveryPost() {
             const nameOnly = names[i].name;
             namesList.push(nameOnly);
         }
+
+        Object.keys(allData).forEach(key => {
+            delete allData[key];
+        });
+
         namesList.forEach((collectionName) => {
             const currentModel = mongoose.model(collectionName, dbSchema);
             currentModel.find({}).then((result) => {
-                allData[collectionName] = result
+                allData[collectionName] = result;
             });
         });
     });
@@ -41,13 +46,14 @@ let allData = {};
 mongoose.connection.on("open", function (ref) {
     console.log("Connected to mongo server.");
     //trying to get collection names
-    onEveryPost();
+    updateAllData();
 });
 
 const dbSchema = new Schema({
     name: String,
     litre: Number,
-    price: Number
+    price: Number,
+    surname: String
 });
 
 app.get("/data", (req, res) => {
@@ -77,23 +83,29 @@ app.route("/data/:collection")
             if (err) {
                 res.send(err)
             } else {
+                updateAllData()
                 res.status(200).send("saved!")
             }
         });
-        onEveryPost()
+
     })
 
     .delete((req, res) => {
         let collection = req.params.collection;
         const currentModel = mongoose.model(collection, dbSchema);
-        currentModel.deleteMany((err) => {
-            if (err) {
-                res.send(err);
-            } else {
-                res.send("collection deleted");
-            }
+        currentModel.collection.drop().then(() => {
+            updateAllData()
+            res.send(`${collection} collection has been deleted`)
         });
-        onEveryPost()
+
+        // currentModel.deleteMany((err) => {
+        //     if (err) {
+        //         res.send(err);
+        //     } else {
+        //         res.send("collection deleted");
+        //     }
+        // });
+
     });
 
 app.route("/data/:collection/:foodName")
@@ -113,10 +125,12 @@ app.route("/data/:collection/:foodName")
         const { collection, foodName } = req.params
         const currentModel = mongoose.model(collection, dbSchema);
         (async function () {
-            reees = await currentModel.updateOne({ name: foodName }, req.body, { overwrite: true })
-            res.send("Success");
+            currentModel.updateOne({ name: foodName }, req.body).then(() => {
+                updateAllData();
+                res.send("Success");
+            })
         })();
-        onEveryPost();
+
     })
     .delete((req, res) => {
         const { collection, foodName } = req.params
@@ -125,10 +139,11 @@ app.route("/data/:collection/:foodName")
             if (err) {
                 res.send(err);
             } else {
+                updateAllData();
                 res.send("Successfully deleted");
             }
         });
-        onEveryPost();
+
     });
 
 app.listen(4000, () => {
