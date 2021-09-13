@@ -9,10 +9,6 @@ app.use(bodyParser.urlencoded({
 }));
 
 app.use(cors())
-
-function isObjectEmpty(obj) {
-    return Object.keys(obj).length === 0;
-}
 main().catch(err => console.log(err));
 
 async function main() {
@@ -35,7 +31,9 @@ function updateAllData() {
         namesList.forEach((collectionName) => {
             const currentModel = mongoose.model(collectionName, dbSchema);
             currentModel.find({}).then((result) => {
-                allData[collectionName] = result;
+                if (collectionName !== "waiters") {
+                    allData[collectionName] = result;
+                }
             });
         });
     });
@@ -43,9 +41,9 @@ function updateAllData() {
 
 let allData = {};
 
+
 mongoose.connection.on("open", function (ref) {
     console.log("Connected to mongo server.");
-    //trying to get collection names
     updateAllData();
 });
 
@@ -56,8 +54,11 @@ const dbSchema = new Schema({
     surname: String
 });
 
+// Collections
+mongoose.model("waiters", dbSchema);
+
 app.get("/data", (req, res) => {
-    res.send(allData)
+    res.send(allData);
 });
 
 app.route("/data/:collection")
