@@ -7,6 +7,7 @@ const { Schema } = mongoose;
 app.use(bodyParser.urlencoded({
     extended: true
 }));
+app.use(bodyParser.json());
 
 app.use(cors())
 main().catch(err => console.log(err));
@@ -51,6 +52,7 @@ const dbSchema = new Schema({
     name: String,
     litre: Number,
     price: Number,
+    phoneNumber: String,
     surname: String
 });
 
@@ -98,14 +100,6 @@ app.route("/data/:collection")
             updateAllData()
             res.send(`${collection} collection has been deleted`)
         });
-
-        // currentModel.deleteMany((err) => {
-        //     if (err) {
-        //         res.send(err);
-        //     } else {
-        //         res.send("collection deleted");
-        //     }
-        // });
 
     });
 
