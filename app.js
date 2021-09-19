@@ -63,6 +63,24 @@ app.get("/data", (req, res) => {
     res.send(allData);
 });
 
+app.get("/collections", (req, res) => {
+    let namesList = [];
+    mongoose.connection.db.listCollections().toArray(function (err, names) {
+        for (let i = 0; i < names.length; i++) {
+            // gets only the name and adds it to a list
+            const nameOnly = names[i].name;
+            if (nameOnly !== "waiters") {
+                namesList.push(nameOnly);
+            }
+        }
+        let output = namesList.reduce((acc, name) => {
+            acc[name] = name
+            return acc
+        }, {});
+        res.send(output);
+    });
+});
+
 app.route("/data/:collection")
     .get((req, res) => {
         const { params } = req;
@@ -87,7 +105,9 @@ app.route("/data/:collection")
                 res.send(err)
             } else {
                 updateAllData()
-                res.status(200).send("saved!")
+                setTimeout(() => {
+                    res.status(200).send("saved!")
+                }, 1000);
             }
         });
 
@@ -98,7 +118,9 @@ app.route("/data/:collection")
         const currentModel = mongoose.model(collection, dbSchema);
         currentModel.collection.drop().then(() => {
             updateAllData()
-            res.send(`${collection} collection has been deleted`)
+            setTimeout(() => {
+                res.send(`${collection} collection has been deleted`)
+            }, 1000);
         });
 
     });
@@ -122,7 +144,9 @@ app.route("/data/:collection/:foodName")
         (async function () {
             currentModel.updateOne({ name: foodName }, req.body).then(() => {
                 updateAllData();
-                res.send("Success");
+                setTimeout(() => {
+                    res.send("Success");
+                }, 1000);
             })
         })();
 
@@ -135,7 +159,9 @@ app.route("/data/:collection/:foodName")
                 res.send(err);
             } else {
                 updateAllData();
-                res.send("Successfully deleted");
+                setTimeout(() => {
+                    res.send("Successfully deleted");
+                }, 1000);
             }
         });
 
