@@ -32,7 +32,7 @@ function updateAllData() {
         namesList.forEach((collectionName) => {
             const currentModel = mongoose.model(collectionName, dbSchema);
             currentModel.find({}).then((result) => {
-                if (collectionName !== "waiters") {
+                if (collectionName !== "waiters" || collectionName !== "status") {
                     allData[collectionName] = result;
                 }
             });
@@ -56,11 +56,45 @@ const dbSchema = new Schema({
     surname: String
 });
 
+const statusSchema = new Schema({
+    date: String,
+    money: Number
+}, { collection: "status" });
+
+const status = mongoose.model("Status", statusSchema, "status");
+
 // Collections
 mongoose.model("waiters", dbSchema);
 
 app.get("/data", (req, res) => {
     res.send(allData);
+});
+
+app.get("/status", (req, res) => {
+    status.find({}).then((result) => {
+        res.status(200).send(result);
+    });
+});
+
+app.post("/status", (req, res) => {
+    let data = req.body;
+    status.findOne({ date: data.date }).then((result) => {
+        if (result) {
+            status.updateOne({ date: data.date }, { date: result.date, money: (result.money * 1 + data.money * 1) }).then(() => {
+                res.send("updated!")
+            })
+        } else {
+            let newDocument = new status(data);
+            newDocument.save((err) => {
+                if (err) {
+                    res.send(err)
+                } else {
+                    res.send("success!")
+                }
+            })
+        }
+    });
+
 });
 
 app.get("/collections", (req, res) => {
