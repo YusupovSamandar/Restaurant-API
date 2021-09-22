@@ -32,7 +32,7 @@ function updateAllData() {
         namesList.forEach((collectionName) => {
             const currentModel = mongoose.model(collectionName, dbSchema);
             currentModel.find({}).then((result) => {
-                if (collectionName !== "waiters" || collectionName !== "status") {
+                if (collectionName !== "waiters" && collectionName !== "status") {
                     allData[collectionName] = result;
                 }
             });
@@ -103,7 +103,7 @@ app.get("/collections", (req, res) => {
         for (let i = 0; i < names.length; i++) {
             // gets only the name and adds it to a list
             const nameOnly = names[i].name;
-            if (nameOnly !== "waiters") {
+            if (nameOnly !== "waiters" && nameOnly !== "status") {
                 namesList.push(nameOnly);
             }
         }
