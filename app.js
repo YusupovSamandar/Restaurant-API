@@ -76,6 +76,13 @@ app.get("/status", (req, res) => {
     });
 });
 
+app.get("/status/:year", (req, res) => {
+
+    status.find({ "date": { "$regex": req.params.year, "$options": "i" } }).then((result) => {
+        res.status(200).send(result);
+    });
+});
+
 app.post("/status", (req, res) => {
     let data = req.body;
     status.findOne({ date: data.date }).then((result) => {
@@ -141,7 +148,7 @@ app.route("/data/:collection")
                 updateAllData()
                 setTimeout(() => {
                     res.status(200).send("saved!")
-                }, 1000);
+                }, 1500);
             }
         });
 
@@ -153,8 +160,8 @@ app.route("/data/:collection")
         currentModel.collection.drop().then(() => {
             updateAllData()
             setTimeout(() => {
-                res.send(`${collection} collection has been deleted`)
-            }, 1000);
+                res.status(200).send(`${collection} collection has been deleted`)
+            }, 1500);
         });
 
     });
@@ -180,7 +187,7 @@ app.route("/data/:collection/:foodName")
                 updateAllData();
                 setTimeout(() => {
                     res.send("Success");
-                }, 1000);
+                }, 1500);
             })
         })();
 
@@ -195,7 +202,7 @@ app.route("/data/:collection/:foodName")
                 updateAllData();
                 setTimeout(() => {
                     res.send("Successfully deleted");
-                }, 1000);
+                }, 1500);
             }
         });
 
