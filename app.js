@@ -1,9 +1,19 @@
 const express = require("express");
 const bodyParser = require("body-parser");
 const mongoose = require("mongoose");
-const cors = require('cors')
+const cors = require('cors');
+const http = require("http");
 const app = express();
+const socketio = require("socket.io");
 const { Schema } = mongoose;
+
+const server = http.createServer(app);
+const io = socketio(server, {
+    cors: {
+        origin: ["http://localhost:3000"]
+    }
+});
+
 app.use(bodyParser.urlencoded({
     extended: true
 }));
@@ -32,7 +42,7 @@ function updateAllData() {
         namesList.forEach((collectionName) => {
             const currentModel = mongoose.model(collectionName, dbSchema);
             currentModel.find({}).then((result) => {
-                if (collectionName !== "waiters" && collectionName !== "status") {
+                if (collectionName !== "waiters" && collectionName !== "status" && collectionName !== "orders") {
                     allData[collectionName] = result;
                 }
             });
@@ -62,6 +72,22 @@ const statusSchema = new Schema({
 }, { collection: "status" });
 
 const status = mongoose.model("Status", statusSchema, "status");
+
+const foodSchema = new Schema({ name: String, quantity: Number });
+
+const ordersSchema = new Schema({
+    table: Number,
+    foods: [foodSchema],
+    money: Number
+}, { collection: "orders" });
+
+const orders = mongoose.model("Orders", ordersSchema, "orders");
+
+app.get("/orders", (req, res) => {
+    orders.find({}).then((result) => {
+        res.status(200).send(result);
+    });
+});
 
 // Collections
 mongoose.model("waiters", dbSchema);
@@ -110,7 +136,7 @@ app.get("/collections", (req, res) => {
         for (let i = 0; i < names.length; i++) {
             // gets only the name and adds it to a list
             const nameOnly = names[i].name;
-            if (nameOnly !== "waiters" && nameOnly !== "status") {
+            if (nameOnly !== "waiters" && nameOnly !== "status" && nameOnly !== "orders") {
                 namesList.push(nameOnly);
             }
         }
@@ -208,6 +234,25 @@ app.route("/data/:collection/:foodName")
 
     });
 
-app.listen(4000, () => {
+io.on("connection", socket => {
+    console.log("New WS Connection...");
+    socket.on('post-order', (orderObj) => {
+        const newDocument = new orders(orderObj);
+        newDocument.save(err => {
+            if (!err) {
+                io.emit('recieve-order', "order sent");
+            }
+        });
+    });
+    socket.on('done-order', (orderId) => {
+        orders.findByIdAndRemove(orderId, (err) => {
+            if (!err) {
+                io.emit('recieve-order', "order deleted");
+            }
+        })
+    });
+});
+
+server.listen(4000, () => {
     console.log("localhost is running on port 4000");
 });
