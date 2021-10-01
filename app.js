@@ -102,6 +102,14 @@ app.get("/status", (req, res) => {
     });
 });
 
+
+
+app.delete("/status", (req, res) => {
+    status.deleteMany({ "date": { "$not": { "$regex": `${new Date().getMonth() + 1}/${new Date().getFullYear()}`, "$options": "i" } } }).then((response) => {
+        res.send("success");
+    }).catch(err => res.send(err));
+});
+
 app.get("/status/:year", (req, res) => {
 
     status.find({ "date": { "$regex": req.params.year, "$options": "i" } }).then((result) => {
