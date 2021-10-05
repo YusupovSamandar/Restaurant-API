@@ -187,7 +187,6 @@ app.route("/data/:collection")
     })
 
     .post(upload.single('productImage'), (req, res) => {
-        console.log(req.file);
         const data = req.body;
         const { params: { collection } } = req;
         const currentModel = mongoose.model(collection, dbSchema);
