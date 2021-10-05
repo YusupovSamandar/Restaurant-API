@@ -62,6 +62,8 @@ const dbSchema = new Schema({
     name: String,
     litre: Number,
     price: Number,
+    price07: Number,
+    price05: Number,
     phoneNumber: String,
     surname: String
 });
