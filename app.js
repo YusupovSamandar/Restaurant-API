@@ -5,7 +5,19 @@ const cors = require('cors');
 const http = require("http");
 const app = express();
 const socketio = require("socket.io");
+const multer = require("multer");
+
+const storage = multer.diskStorage({
+    destination: (req, file, cb) => {
+        cb(null, './uploads/')
+    },
+    filename: (req, file, cb) => {
+        cb(null, file.originalname)
+    }
+})
+
 const { Schema } = mongoose;
+const upload = multer({ storage });
 
 const server = http.createServer(app);
 const io = socketio(server, {
@@ -17,6 +29,7 @@ const io = socketio(server, {
 app.use(bodyParser.urlencoded({
     extended: true
 }));
+app.use('/uploads', express.static('uploads'));
 app.use(bodyParser.json());
 
 app.use(cors())
@@ -65,7 +78,8 @@ const dbSchema = new Schema({
     price07: Number,
     price05: Number,
     phoneNumber: String,
-    surname: String
+    surname: String,
+    productImage: String
 });
 
 const statusSchema = new Schema({
@@ -172,11 +186,12 @@ app.route("/data/:collection")
 
     })
 
-    .post((req, res) => {
+    .post(upload.single('productImage'), (req, res) => {
+        console.log(req.file);
         const data = req.body;
         const { params: { collection } } = req;
         const currentModel = mongoose.model(collection, dbSchema);
-        const newDocument = new currentModel(data);
+        const newDocument = new currentModel({ ...data, productImage: req.file.path });
         newDocument.save(err => {
             if (err) {
                 res.send(err)
