@@ -4,6 +4,8 @@ const mongoose = require("mongoose");
 const cors = require('cors');
 const http = require("http");
 const app = express();
+const fs = require('fs');
+let serviceJson = require('./service.json');
 const socketio = require("socket.io");
 const multer = require("multer");
 
@@ -102,6 +104,17 @@ const orders = mongoose.model("Orders", ordersSchema, "orders");
 app.get("/orders", (req, res) => {
     orders.find({}).then((result) => {
         res.status(200).send(result);
+    });
+});
+
+app.get("/service", (req, res) => {
+    res.send(serviceJson.service);
+});
+app.post("/service", (req, res) => {
+    serviceJson.service = req.body.service + "";
+    fs.writeFile("./service.json", JSON.stringify(serviceJson), function writeJSON(err) {
+        if (err) return res.send(err);
+        res.send("success")
     });
 });
 
