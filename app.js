@@ -190,7 +190,7 @@ app.route("/data/:collection")
         const data = req.body;
         const { params: { collection } } = req;
         const currentModel = mongoose.model(collection, dbSchema);
-        if (!req.file) {
+        if (!req.files) {
             const newDocument = new currentModel(data);
             newDocument.save(err => {
                 if (err) {
