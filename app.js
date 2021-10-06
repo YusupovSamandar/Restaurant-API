@@ -190,17 +190,31 @@ app.route("/data/:collection")
         const data = req.body;
         const { params: { collection } } = req;
         const currentModel = mongoose.model(collection, dbSchema);
-        const newDocument = new currentModel({ ...data, productImage: req.file.path });
-        newDocument.save(err => {
-            if (err) {
-                res.send(err)
-            } else {
-                updateAllData()
-                setTimeout(() => {
-                    res.status(200).send("saved!")
-                }, 1500);
-            }
-        });
+        if (!req.file) {
+            const newDocument = new currentModel(data);
+            newDocument.save(err => {
+                if (err) {
+                    res.send(err)
+                } else {
+                    updateAllData()
+                    setTimeout(() => {
+                        res.status(200).send("saved!")
+                    }, 1500);
+                }
+            });
+        } else {
+            const newDocument = new currentModel({ ...data, productImage: req.file.path });
+            newDocument.save(err => {
+                if (err) {
+                    res.send(err)
+                } else {
+                    updateAllData()
+                    setTimeout(() => {
+                        res.status(200).send("saved!")
+                    }, 1500);
+                }
+            });
+        }
 
     })
 
