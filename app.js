@@ -89,7 +89,7 @@ const statusSchema = new Schema({
 
 const status = mongoose.model("Status", statusSchema, "status");
 
-const foodSchema = new Schema({ name: String, quantity: Number });
+const foodSchema = new Schema({ name: String, quantity: Number, price: Number });
 
 const ordersSchema = new Schema({
     table: Number,
