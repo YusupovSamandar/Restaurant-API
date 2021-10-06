@@ -268,8 +268,8 @@ io.on("connection", socket => {
             }
         });
     });
-    socket.on('done-order', (orderId) => {
-        orders.findByIdAndRemove(orderId, (err) => {
+    socket.on('done-order', (tableNumber) => {
+        orders.deleteMany({ table: tableNumber }, (err) => {
             if (!err) {
                 io.emit('recieve-order', "order deleted");
             }
