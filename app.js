@@ -170,18 +170,22 @@ app.post("/status", (req, res) => {
 app.get("/collections", (req, res) => {
     let namesList = [];
     mongoose.connection.db.listCollections().toArray(function (err, names) {
-        for (let i = 0; i < names.length; i++) {
-            // gets only the name and adds it to a list
-            const nameOnly = names[i].name;
-            if (nameOnly !== "waiters" && nameOnly !== "status" && nameOnly !== "orders") {
-                namesList.push(nameOnly);
+        if (names.length) {
+            for (let i = 0; i < names.length; i++) {
+                // gets only the name and adds it to a list
+                const nameOnly = names[i].name;
+                if (nameOnly !== "waiters" && nameOnly !== "status" && nameOnly !== "orders") {
+                    namesList.push(nameOnly);
+                }
             }
+            let output = namesList.reduce((acc, name) => {
+                acc[name] = name
+                return acc
+            }, {});
+            res.send(output);
+        } else {
+            res.send("No connection!")
         }
-        let output = namesList.reduce((acc, name) => {
-            acc[name] = name
-            return acc
-        }, {});
-        res.send(output);
     });
 });
 
@@ -203,8 +207,8 @@ app.route("/data/:collection")
         const data = req.body;
         const { params: { collection } } = req;
         const currentModel = mongoose.model(collection, dbSchema);
-        if (!req.files) {
-            const newDocument = new currentModel(data);
+        if (!req.file) {
+            const newDocument = new currentModel({ ...data });
             newDocument.save(err => {
                 if (err) {
                     res.send(err)
@@ -228,6 +232,7 @@ app.route("/data/:collection")
                 }
             });
         }
+
 
     })
 
