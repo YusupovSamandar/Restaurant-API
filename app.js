@@ -93,6 +93,8 @@ const dbSchema = new Schema({
   price07: Number,
   price05: Number,
   phoneNumber: String,
+  loginName: String,
+  loginPassword: String,
   surname: String,
   productImage: String,
 });
@@ -340,7 +342,6 @@ app
 io.on("connection", (socket) => {
   console.log("New WS Connection...");
   socket.on("post-order", (orderObj) => {
-    console.log(orderObj);
     const newDocument = new orders(orderObj);
     newDocument.save((err) => {
       if (!err) {
