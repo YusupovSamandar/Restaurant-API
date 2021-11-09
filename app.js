@@ -48,7 +48,7 @@ app.use(cors());
 main().catch((err) => console.log(err));
 
 async function main() {
-  await mongoose.connect("mongodb+srv://admin-david:david1031@cluster0.e1tmm.mongodb.net/restaurantDB?retryWrites=true&w=majority");
+  await mongoose.connect("mongodb://localhost:27017/restaurantDB");
 }
 
 function updateAllData() {
