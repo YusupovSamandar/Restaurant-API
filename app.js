@@ -48,7 +48,7 @@ app.use(cors());
 main().catch((err) => console.log(err));
 
 async function main() {
-  await mongoose.connect("mongodb://localhost:27017/restaurantDB");
+  await mongoose.connect("mongodb+srv://admin-david:david1031@cluster0.e1tmm.mongodb.net/restaurantDB?retryWrites=true&w=majority");
 }
 
 function updateAllData() {
@@ -93,6 +93,8 @@ const dbSchema = new Schema({
   price07: Number,
   price05: Number,
   phoneNumber: String,
+  loginName: String,
+  loginPassword: String,
   surname: String,
   productImage: String,
 });
@@ -340,7 +342,6 @@ app
 io.on("connection", (socket) => {
   console.log("New WS Connection...");
   socket.on("post-order", (orderObj) => {
-    console.log(orderObj);
     const newDocument = new orders(orderObj);
     newDocument.save((err) => {
       if (!err) {
