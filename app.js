@@ -150,10 +150,26 @@ app.post("/service", (req, res) => {
 });
 
 // Collections
-mongoose.model("waiters", dbSchema);
+const waiterModel = mongoose.model("waiters", dbSchema);
 
 app.get("/data", (req, res) => {
   res.send(allData);
+  
+});
+
+app.post("/login", (req, res) => {
+  let waiterDetail = req.body;
+  waiterModel.findOne({loginName: waiterDetail.session, loginPassword: waiterDetail.password}, (err, resultt) => {
+      if(err){
+        res.send("Adurashid moool");
+      }else{
+        if(resultt === null){
+          res.send(false);
+        }else{
+          res.send(resultt);
+        }
+      }
+    })
 });
 
 app.get("/status", (req, res) => {
