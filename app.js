@@ -29,6 +29,7 @@ const io = socketio(server, {
       "http://localhost:3000",
       "http://localhost:3001",
       "http://192.168.1.2:3000",
+      "http://192.168.43.206:3000",
       "http://192.168.1.2:3001",
       "http://192.168.43.2:3001",
       "http://192.168.43.2:3000",
@@ -92,6 +93,7 @@ const dbSchema = new Schema({
   price: Number,
   price07: Number,
   price05: Number,
+  responsibleWaiter: String,
   phoneNumber: String,
   loginName: String,
   loginPassword: String,
@@ -153,23 +155,30 @@ app.post("/service", (req, res) => {
 const waiterModel = mongoose.model("waiters", dbSchema);
 
 app.get("/data", (req, res) => {
-  res.send(allData);
-  
+  if (Object.keys(allData) > 0) {
+    res.send(allData);
+  } else {
+    updateAllData();
+    setTimeout(() => {
+      res.status(200).send(allData);
+    }, 1500);
+  }
+
 });
 
 app.post("/login", (req, res) => {
   let waiterDetail = req.body;
-  waiterModel.findOne({loginName: waiterDetail.session, loginPassword: waiterDetail.password}, (err, resultt) => {
-      if(err){
-        res.send("Adurashid moool");
-      }else{
-        if(resultt === null){
-          res.send(false);
-        }else{
-          res.send(resultt);
-        }
+  waiterModel.findOne({ loginName: waiterDetail.session, loginPassword: waiterDetail.password }, (err, resultt) => {
+    if (err) {
+      res.send("Adurashid moool");
+    } else {
+      if (resultt === null) {
+        res.send(false);
+      } else {
+        res.send(resultt);
       }
-    })
+    }
+  })
 });
 
 app.get("/status", (req, res) => {
