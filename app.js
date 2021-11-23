@@ -93,7 +93,7 @@ const dbSchema = new Schema({
   price: Number,
   price07: Number,
   price05: Number,
-  responsibleWaiter: String,
+  isAvailable: Number,
   phoneNumber: String,
   loginName: String,
   loginPassword: String,
@@ -121,6 +121,7 @@ const foodSchema = new Schema({
 const ordersSchema = new Schema(
   {
     table: Number,
+    responsibleWaiter: { type: String, default: 'none' },
     foods: [foodSchema],
     time: String,
     money: Number,
@@ -155,7 +156,7 @@ app.post("/service", (req, res) => {
 const waiterModel = mongoose.model("waiters", dbSchema);
 
 app.get("/data", (req, res) => {
-  if (Object.keys(allData) > 0) {
+  if (Object.keys(allData).length > 0) {
     res.send(allData);
   } else {
     updateAllData();
@@ -163,7 +164,26 @@ app.get("/data", (req, res) => {
       res.status(200).send(allData);
     }, 1500);
   }
+});
 
+app.get("/waiterOrders/new", (req, res) => {
+  orders.find({ responsibleWaiter: "none" }).then((result) => {
+    res.status(200).send(result);
+  });
+});
+
+app.post("/occupyOrder", (req, res) => {
+  let { table, name } = req.body;
+  orders.updateMany({ "table": table }, { "$set": { "responsibleWaiter": name } }).then((resss) => {
+    res.send("success!!")
+  });
+});
+
+app.get("/waiterOrders/:name", (req, res) => {
+  let waiterName = req.params.name;
+  orders.find({ responsibleWaiter: waiterName }).then((result) => {
+    res.status(200).send(result);
+  });
 });
 
 app.post("/login", (req, res) => {
