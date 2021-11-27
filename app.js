@@ -181,19 +181,24 @@ app.post("/occupyOrder", (req, res) => {
 
 app.get("/waiterOrders/:name", (req, res) => {
   let waiterName = req.params.name;
+  console.log(waiterName)
   orders.find({ responsibleWaiter: waiterName }).then((result) => {
     res.status(200).send(result);
   });
 });
 
 app.post("/login", (req, res) => {
-  let waiterDetail = req.body;
-  waiterModel.findOne({ loginName: waiterDetail.session, loginPassword: waiterDetail.password }, (err, resultt) => {
+  let waiterDetail = req.body.session;
+  waiterModel.findOne({ loginName: waiterDetail.email, loginPassword: waiterDetail.password }, (err, resultt) => {
     if (err) {
-      res.send("Adurashid moool");
+      res.status(400).send({
+        message: 'This is an error!'
+      });
     } else {
       if (resultt === null) {
-        res.send(false);
+        res.status(400).send({
+          message: 'false'
+        });
       } else {
         res.send(resultt);
       }
