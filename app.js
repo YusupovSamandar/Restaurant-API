@@ -392,10 +392,22 @@ app
 io.on("connection", (socket) => {
   console.log("New WS Connection...");
   socket.on("post-order", (orderObj) => {
-    const newDocument = new orders(orderObj);
-    newDocument.save((err) => {
-      if (!err) {
-        io.emit("recieve-order", "order sent");
+    orders.findOne({ table: orderObj.table }, (err, response) => {
+      if (!response || response.responsibleWaiter === "none") {
+        const newDocument = new orders(orderObj);
+        newDocument.save((err) => {
+          if (!err) {
+            io.emit("recieve-order", "none");
+          }
+        });
+      } else if (response.responsibleWaiter !== "none") {
+        orderObj.responsibleWaiter = response.responsibleWaiter;
+        const newDocument = new orders(orderObj);
+        newDocument.save((err) => {
+          if (!err) {
+            io.emit("recieve-order", orderObj.responsibleWaiter);
+          }
+        });
       }
     });
   });
