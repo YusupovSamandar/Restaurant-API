@@ -29,6 +29,7 @@ const io = socketio(server, {
       "http://localhost:3000",
       "http://localhost:3001",
       "http://192.168.1.2:3000",
+      "http://192.168.43.206:3000",
       "http://192.168.1.2:3001",
       "http://192.168.43.2:3001",
       "http://192.168.43.2:3000",
@@ -92,6 +93,7 @@ const dbSchema = new Schema({
   price: Number,
   price07: Number,
   price05: Number,
+  isAvailable: Number,
   phoneNumber: String,
   loginName: String,
   loginPassword: String,
@@ -119,6 +121,7 @@ const foodSchema = new Schema({
 const ordersSchema = new Schema(
   {
     table: Number,
+    responsibleWaiter: { type: String, default: "none" },
     foods: [foodSchema],
     time: String,
     money: Number,
@@ -153,20 +156,53 @@ app.post("/service", (req, res) => {
 const waiterModel = mongoose.model("waiters", dbSchema);
 
 app.get("/data", (req, res) => {
-  res.send(allData);
+  if (Object.keys(allData).length > 0) {
+    res.send(allData);
+  } else {
+    updateAllData();
+    setTimeout(() => {
+      res.status(200).send(allData);
+    }, 1500);
+  }
+});
+
+app.get("/waiterOrders/new", (req, res) => {
+  orders.find({ responsibleWaiter: "none" }).then((result) => {
+    res.status(200).send(result);
+  });
+});
+
+app.post("/occupyOrder", (req, res) => {
+  let { table, name } = req.body;
+  orders
+    .updateMany({ table: table }, { $set: { responsibleWaiter: name } })
+    .then((resss) => {
+      res.send("success!!");
+    });
+});
+
+app.get("/waiterOrders/:name", (req, res) => {
+  let waiterName = req.params.name;
+  console.log(waiterName);
+  orders.find({ responsibleWaiter: waiterName }).then((result) => {
+    res.status(200).send(result);
+  });
 });
 
 app.post("/login", (req, res) => {
   let waiterDetail = req.body.session;
-  console.log(waiterDetail);
   waiterModel.findOne(
     { loginName: waiterDetail.email, loginPassword: waiterDetail.password },
     (err, resultt) => {
       if (err) {
-        res.send("Eoyuto67");
+        res.status(400).send({
+          message: "This is an error!",
+        });
       } else {
         if (resultt === null) {
-          res.send(false);
+          res.status(400).send({
+            message: "false",
+          });
         } else {
           res.send(resultt);
         }
@@ -361,10 +397,22 @@ app
 io.on("connection", (socket) => {
   console.log("New WS Connection...");
   socket.on("post-order", (orderObj) => {
-    const newDocument = new orders(orderObj);
-    newDocument.save((err) => {
-      if (!err) {
-        io.emit("recieve-order", "order sent");
+    orders.findOne({ table: orderObj.table }, (err, response) => {
+      if (!response || response.responsibleWaiter === "none") {
+        const newDocument = new orders(orderObj);
+        newDocument.save((err) => {
+          if (!err) {
+            io.emit("recieve-order", "none");
+          }
+        });
+      } else if (response.responsibleWaiter !== "none") {
+        orderObj.responsibleWaiter = response.responsibleWaiter;
+        const newDocument = new orders(orderObj);
+        newDocument.save((err) => {
+          if (!err) {
+            io.emit("recieve-order", orderObj.responsibleWaiter);
+          }
+        });
       }
     });
   });
