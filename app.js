@@ -416,7 +416,7 @@ io.on("connection", (socket) => {
   socket.on("order-completed", ({ idOfOrder, tableNumber }) => {
     orders.findByIdAndUpdate(idOfOrder, { status: "ready" }, (err, foundOrder) => {
       if (!err) {
-        io.emit("take-order", tableNumber);
+        io.emit("take-order", { table: tableNumber, responsibleWaiter: foundOrder.responsibleWaiter });
         io.emit("recieve-order", "order deleted");
       }
     });
