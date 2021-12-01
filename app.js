@@ -93,6 +93,7 @@ const dbSchema = new Schema({
   price: Number,
   price07: Number,
   price05: Number,
+  description: String,
   isAvailable: Number,
   phoneNumber: String,
   loginName: String,
@@ -124,6 +125,7 @@ const ordersSchema = new Schema(
     responsibleWaiter: { type: String, default: "none" },
     foods: [foodSchema],
     time: String,
+    status: { type: String, default: 'pending' },
     money: Number,
   },
   { collection: "orders" }
@@ -413,6 +415,14 @@ io.on("connection", (socket) => {
             io.emit("recieve-order", orderObj.responsibleWaiter);
           }
         });
+      }
+    });
+  });
+  socket.on("order-completed", ({ idOfOrder, tableNumber }) => {
+    orders.findByIdAndUpdate(idOfOrder, { status: "ready" }, (err, foundOrder) => {
+      if (!err) {
+        io.emit("take-order", { table: tableNumber, responsibleWaiter: foundOrder.responsibleWaiter });
+        io.emit("recieve-order", "order deleted");
       }
     });
   });
