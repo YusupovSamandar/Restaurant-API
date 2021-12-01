@@ -125,7 +125,7 @@ const ordersSchema = new Schema(
     responsibleWaiter: { type: String, default: "none" },
     foods: [foodSchema],
     time: String,
-    status: { type: String, default: 'pending' },
+    status: { type: String, default: "pending" },
     money: Number,
   },
   { collection: "orders" }
@@ -419,17 +419,37 @@ io.on("connection", (socket) => {
     });
   });
   socket.on("order-completed", ({ idOfOrder, tableNumber }) => {
-    orders.findByIdAndUpdate(idOfOrder, { status: "ready" }, (err, foundOrder) => {
-      if (!err) {
-        io.emit("take-order", { table: tableNumber, responsibleWaiter: foundOrder.responsibleWaiter });
-        io.emit("recieve-order", "order deleted");
+    orders.findByIdAndUpdate(
+      idOfOrder,
+      { status: "ready" },
+      (err, foundOrder) => {
+        if (!err) {
+          io.emit("take-order", {
+            table: tableNumber,
+            responsibleWaiter: foundOrder.responsibleWaiter,
+          });
+          io.emit("recieve-order", "order deleted");
+        }
       }
-    });
+    );
   });
   socket.on("done-order", (tableNumber) => {
     orders.deleteMany({ table: tableNumber }, (err) => {
       if (!err) {
         io.emit("recieve-order", "order deleted");
+      }
+    });
+  });
+
+  socket.on("call-waiter", (tableNumber) => {
+    orders.findOne({ table: tableNumber }, (err, obj) => {
+      if (!obj) {
+        io.emit("coming", { responsibleWaiter: "none" });
+      } else {
+        io.emit("coming", {
+          table: obj.table,
+          responsibleWaiter: obj.responsibleWaiter,
+        });
       }
     });
   });
