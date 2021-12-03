@@ -33,6 +33,8 @@ const io = socketio(server, {
       "http://192.168.1.2:3001",
       "http://192.168.43.2:3001",
       "http://192.168.43.2:3000",
+      "http://192.168.1.200:3001",
+      "http://192.168.1.200:3000",
     ],
   },
 });
@@ -211,6 +213,14 @@ app.post("/login", (req, res) => {
       }
     }
   );
+});
+
+app.get("/reduce", (req, res) => {
+  // let { tableNum, products } = req.body
+
+  orders.findOne({ table: 5, "foods.name": "Shorva 1" }, (err, result) => {
+    res.send(result);
+  });
 });
 
 app.get("/status", (req, res) => {
