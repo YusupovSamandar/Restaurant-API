@@ -242,7 +242,7 @@ function modifyReduce(arr, product) {
 }
 
 app.get("/reduce", (req, res) => {
-  let obj = { tableNum: 994, pr: [{ name: "Mastava 1", quantity: 1 }, { name: "Chozma Lagmon 1", quantity: 1 }] }
+  let obj = req.body;
   let { tableNum, pr } = obj;
   // {$or:[{region: "NA"},{sector:"Some Sector"}]}
   orders.find({ table: tableNum }, (err, result) => {
