@@ -241,7 +241,7 @@ function modifyReduce(arr, product) {
   return modified;
 }
 
-app.get("/reduce", (req, res) => {
+app.post("/reduce", (req, res) => {
   let obj = req.body;
   let { tableNum, pr } = obj;
   // {$or:[{region: "NA"},{sector:"Some Sector"}]}
