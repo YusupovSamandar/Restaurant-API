@@ -34,6 +34,8 @@ const io = socketio(server, {
       "http://192.168.43.2:3001",
       "http://192.168.43.2:3000",
       "http://192.168.1.200:3001",
+      "http://192.168.1.12:3001",
+      "http://192.168.1.12:3000",
       "http://192.168.1.200:3000",
     ],
   },
@@ -215,11 +217,46 @@ app.post("/login", (req, res) => {
   );
 });
 
-app.get("/reduce", (req, res) => {
-  // let { tableNum, products } = req.body
+function modifyReduce(arr, product) {
+  let reduceQuantity = product.quantity + 0;
+  let modified = arr.map((obj) => {
+    let foodsModified = obj.foods.map((food) => {
+      if (food.name === product.name) {
+        if (food.quantity >= reduceQuantity) {
+          let nextTempNum = food.quantity - reduceQuantity;
+          reduceQuantity = 0;
+          // console.log(reduceQuantity);
+          return { name: food.name, quantity: nextTempNum, productImage: food.productImage, price: food.price, _id: food._id };
+        } else {
+          reduceQuantity -= food.quantity;
+          // console.log(reduceQuantity);
+          return { name: food.name, quantity: 0, productImage: food.productImage, price: food.price, _id: food._id };
+        }
+      } else {
+        return food;
+      }
+    });
+    return { _id: obj._id, table: obj.table, responsibleWaiter: obj.responsibleWaiter, foods: foodsModified, time: obj.time, status: obj.status, money: obj.money };
+  });
+  return modified;
+}
 
-  orders.findOne({ table: 5, "foods.name": "Shorva 1" }, (err, result) => {
-    res.send(result);
+app.get("/reduce", (req, res) => {
+  let obj = req.body;
+  let { tableNum, pr } = obj;
+  // {$or:[{region: "NA"},{sector:"Some Sector"}]}
+  orders.find({ table: tableNum }, (err, result) => {
+    let nextTempArr = result;
+    pr.forEach((product) => {
+      nextTempArr = modifyReduce(nextTempArr, product);
+    })
+    for (let i = 0; i < result.length; i++) {
+      result[i].foods = nextTempArr[i].foods;
+      result[i].save();
+    }
+    setTimeout(() => {
+      res.send("success")
+    }, 500);
   });
 });
 
