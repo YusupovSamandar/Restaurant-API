@@ -255,9 +255,15 @@ app.post("/reduce", (req, res) => {
       result[i].save();
     }
     setTimeout(() => {
-      res.send("success")
+      orders.updateMany({}, { "$pull": { "foods": { "quantity": 0 } } }, { safe: true, multi: true }).then(() => {
+        res.send("success")
+      }).catch((er) => {
+        res.send(er)
+      });
+
     }, 500);
   });
+
 });
 
 app.get("/status", (req, res) => {
