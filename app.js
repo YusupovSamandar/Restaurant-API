@@ -25,19 +25,21 @@ const upload = multer({ storage });
 const server = http.createServer(app);
 const io = socketio(server, {
   cors: {
-    origin: [
-      "http://localhost:3000",
-      "http://localhost:3001",
-      "http://192.168.1.2:3000",
-      "http://192.168.43.206:3000",
-      "http://192.168.1.2:3001",
-      "http://192.168.43.2:3001",
-      "http://192.168.43.2:3000",
-      "http://192.168.1.200:3001",
-      "http://192.168.1.12:3001",
-      "http://192.168.1.12:3000",
-      "http://192.168.1.200:3000",
-    ],
+    origin: "*",
+
+    // origin: [
+    //   "http://localhost:3000",
+    //   "http://localhost:3001",
+    //   "http://192.168.1.2:3000",
+    //   "http://192.168.43.206:3000",
+    //   "http://192.168.1.2:3001",
+    //   "http://192.168.43.2:3001",
+    //   "http://192.168.43.2:3000",
+    //   "http://192.168.1.200:3001",
+    //   "http://192.168.1.12:3001",
+    //   "http://192.168.1.12:3000",
+    //   "http://192.168.1.200:3000",
+    // ],
   },
 });
 
@@ -46,6 +48,15 @@ app.use(
     extended: true,
   })
 );
+app.use(function (req, res, next) {
+  res.header("Access-Control-Allow-Origin", "*");
+  res.header(
+    "Access-Control-Allow-Headers",
+    "Origin, X-Requested-With, Content-Type, Accept-Type"
+  );
+  res.header("Access-Control-Allow-Credentials", "true");
+  next();
+});
 app.use("/uploads", express.static("uploads"));
 app.use(bodyParser.json());
 
@@ -226,17 +237,37 @@ function modifyReduce(arr, product) {
           let nextTempNum = food.quantity - reduceQuantity;
           reduceQuantity = 0;
           // console.log(reduceQuantity);
-          return { name: food.name, quantity: nextTempNum, productImage: food.productImage, price: food.price, _id: food._id };
+          return {
+            name: food.name,
+            quantity: nextTempNum,
+            productImage: food.productImage,
+            price: food.price,
+            _id: food._id,
+          };
         } else {
           reduceQuantity -= food.quantity;
           // console.log(reduceQuantity);
-          return { name: food.name, quantity: 0, productImage: food.productImage, price: food.price, _id: food._id };
+          return {
+            name: food.name,
+            quantity: 0,
+            productImage: food.productImage,
+            price: food.price,
+            _id: food._id,
+          };
         }
       } else {
         return food;
       }
     });
-    return { _id: obj._id, table: obj.table, responsibleWaiter: obj.responsibleWaiter, foods: foodsModified, time: obj.time, status: obj.status, money: obj.money };
+    return {
+      _id: obj._id,
+      table: obj.table,
+      responsibleWaiter: obj.responsibleWaiter,
+      foods: foodsModified,
+      time: obj.time,
+      status: obj.status,
+      money: obj.money,
+    };
   });
   return modified;
 }
@@ -249,21 +280,26 @@ app.post("/reduce", (req, res) => {
     let nextTempArr = result;
     pr.forEach((product) => {
       nextTempArr = modifyReduce(nextTempArr, product);
-    })
+    });
     for (let i = 0; i < result.length; i++) {
       result[i].foods = nextTempArr[i].foods;
       result[i].save();
     }
     setTimeout(() => {
-      orders.updateMany({}, { "$pull": { "foods": { "quantity": 0 } } }, { safe: true, multi: true }).then(() => {
-        res.send("success")
-      }).catch((er) => {
-        res.send(er)
-      });
-
+      orders
+        .updateMany(
+          {},
+          { $pull: { foods: { quantity: 0 } } },
+          { safe: true, multi: true }
+        )
+        .then(() => {
+          res.send("success");
+        })
+        .catch((er) => {
+          res.send(er);
+        });
     }, 500);
   });
-
 });
 
 app.get("/status", (req, res) => {
