@@ -3,8 +3,8 @@ const bodyParser = require("body-parser");
 const mongoose = require("mongoose");
 const cors = require("cors");
 const http = require("http");
+const fs = require('fs');
 const app = express();
-const fs = require("fs");
 let serviceJson = require("./service.json");
 const socketio = require("socket.io");
 const multer = require("multer");
@@ -25,21 +25,7 @@ const upload = multer({ storage });
 const server = http.createServer(app);
 const io = socketio(server, {
   cors: {
-    origin: "*",
-
-    // origin: [
-    //   "http://localhost:3000",
-    //   "http://localhost:3001",
-    //   "http://192.168.1.2:3000",
-    //   "http://192.168.43.206:3000",
-    //   "http://192.168.1.2:3001",
-    //   "http://192.168.43.2:3001",
-    //   "http://192.168.43.2:3000",
-    //   "http://192.168.1.200:3001",
-    //   "http://192.168.1.12:3001",
-    //   "http://192.168.1.12:3000",
-    //   "http://192.168.1.200:3000",
-    // ],
+    origin: "*"
   },
 });
 
@@ -383,6 +369,14 @@ app.get("/collections", (req, res) => {
   });
 });
 
+app.get("/newCollection/:collectionName", (req, res) => {
+  const { params } = req;
+  mongoose.model(params.collectionName, dbSchema);
+  setTimeout(() => {
+    res.redirect("/collections");
+  }, 2000);
+});
+
 app
   .route("/data/:collection")
   .get((req, res) => {
@@ -473,12 +467,13 @@ app
   .delete((req, res) => {
     const { collection, foodName } = req.params;
     const currentModel = mongoose.model(collection, dbSchema);
-    currentModel.deleteOne({ name: foodName }, (err) => {
+    currentModel.findOneAndDelete({ name: foodName }, (err, deletingResult) => {
       if (err) {
         res.send(err);
       } else {
         updateAllData();
         setTimeout(() => {
+          fs.unlink(`${__dirname}/${deletingResult.productImage}`, (err) => err ? console.log(err) : 0);
           res.send("Successfully deleted");
         }, 1500);
       }
